@@ -1,5 +1,5 @@
 #!/bin/bash
-HOSTNAME=debian13-01
+HOSTNAME=debian13-1
 MAC_ADDRESS1="34:8d:b2:4f:26:ff"
 
 if [ "$1" == "" ]; then
@@ -14,13 +14,13 @@ if [ "$1" == "" ]; then
 			--network bridge=br0,mac=$MAC_ADDRESS1 \
 			--cdrom /data/git/kiwi-debian13/image/kiwi-test-image-live-disk.x86_64-13.0-0.install.iso \
 			--disk bus=scsi,pool=images-nvme3,size=50,sparse=true \
+			--boot uefi,loader_secure=yes \
 			--osinfo debian13 \
 			--check path_in_use=off \
 			--autoconsole none \
 			--sysinfo system.serial=27731DFF
 	fi
 fi
-			#--boot uefi,loader_secure=yes \
 			#--graphics vnc \
 			#--cdrom https://susemanager.weiss.ddnss.de/os-images/1/SL-Micro-6.0.0-6/SL-Micro.x86_64-6.0.0.install.iso \
 

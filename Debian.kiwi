@@ -38,8 +38,8 @@
         </type>
     </preferences>
     <preferences profiles="Disk">
-        <type image="oem" filesystem="ext4" firmware="efi" installiso="true" installboot="install" kernelcmdline="console=ttyS0">
-            <bootloader name="grub2" console="serial" timeout="10"/>
+        <type image="oem" filesystem="ext4" firmware="efi" installiso="true" installboot="install">
+            <bootloader name="grub2" timeout="10"/>
             <oemconfig>
                 <oem-swap>true</oem-swap>
                 <oem-unattended>true</oem-unattended>
@@ -50,6 +50,7 @@
     </preferences>
     <users>
         <user password="$1$wYJUgpM5$RXMMeASDc035eX.NbYWFl0" home="/root" name="root" groups="root"/>
+	<user password="$1$wYJUgpM5$RXMMeASDc035eX.NbYWFl0" home="/home/mweiss" name="mweiss" groups="users"/>
 </users>
 <!--
     <repository type="apt-deb" repository_gpgcheck="false" architectures="amd64">
@@ -97,6 +98,7 @@
         <package name="locales-all"/>
         <package name="tzdata"/>
         <package name="openssh-server"/>
+        <package name="fdisk"/>
     </packages>
     <packages type="image" profiles="Virtual">
         <package name="shim-signed"/>
