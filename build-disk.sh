@@ -8,6 +8,9 @@ KIWI_IMAGE="registry.suse.com/bci/kiwi:10.2.33-17.3"
 VARIANT="boxbuild" # requires local installed kiwi 10.3 + boxbuild plugin
 #VARIANT="podman" <- can not work as long as we do not have an image with 10.3 and boxbuild..
 
+DEBIAN="bookworm"
+DEBIAN="trixie"
+
 # clean and recreate the build folder
 rm -rf $TARGET_DIR/image
 mkdir -p $TARGET_DIR/image
@@ -22,18 +25,13 @@ system boxbuild \
 --description $PWD \
 --target-dir $PWD/image \
 --ignore-repos-used-for-build \
---add-repo 'obs://Virtualization:Appliances:Staging/Debian_12_update,apt-deb,kiwi,,,,,,,false' \
---add-repo 'obs://Virtualization:Appliances:Staging/Debian_12_x86_64,apt-deb,kiwi,,,,,,,false' \
---add-repo 'https://ftp.halifax.rwth-aachen.de/debian,apt-deb,bookworm_1,,,,,main,bookworm,false' \
---add-repo 'https://ftp.halifax.rwth-aachen.de/debian,apt-deb,bookworm_2,,,,,contrib,bookworm,false' \
---add-repo 'https://ftp.halifax.rwth-aachen.de/debian,apt-deb,bookworm_3,,,,,non-free,bookworm,false'
-
-exit
 --add-repo obs://Virtualization:Appliances:Staging/Debian_12_update,apt-deb,kiwi,,,,,,,false \
 --add-repo obs://Virtualization:Appliances:Staging/Debian_12_x86_64,apt-deb,kiwi,,,,,,,false \
---add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,trixie_1,,,,,main,trixie,false \
---add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,trixie_2,,,,,contrib,trixie,false \
---add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,trixie_3,,,,,non-free,trixie,false
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false
+
+exit
 
 fi
 
