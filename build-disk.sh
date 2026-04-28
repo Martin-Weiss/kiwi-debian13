@@ -28,8 +28,8 @@ system boxbuild \
 --description $PWD \
 --target-dir $PWD/image \
 --ignore-repos-used-for-build \
---add-repo obs://Virtualization:Appliances:Staging/"Debian_"$DEBIAN_VER"_update",apt-deb,kiwi,,,,,,,false \
---add-repo obs://Virtualization:Appliances:Staging/"Debian_"$DEBIAN_VER"_x86_64",apt-deb,kiwi,,,,,,,false \
+--add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER,apt-deb,kiwi,,,,,,,false \
+--add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER"_x86_64",apt-deb,kiwi,,,,,,,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false
@@ -53,8 +53,8 @@ system build \
 --description /image \
 --target-dir /image/image \
 --ignore-repos-used-for-build \
---add-repo obs://Virtualization:Appliances:Staging/"Debian_"$DEBIAN_VER"_update",apt-deb,kiwi,,,,,,,false \
---add-repo obs://Virtualization:Appliances:Staging/"Debian_"$DEBIAN_VER"_x86_64",apt-deb,kiwi,,,,,,,false \
+--add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER"_update",apt-deb,kiwi,,,,,,,false \
+--add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER"_x86_64",apt-deb,kiwi,,,,,,,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false

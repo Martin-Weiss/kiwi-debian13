@@ -99,6 +99,7 @@
         <package name="tzdata"/>
         <package name="openssh-server"/>
         <package name="fdisk"/>
+        <package name="dialog"/>
     </packages>
     <packages type="image" profiles="Virtual">
         <package name="shim-signed"/>
