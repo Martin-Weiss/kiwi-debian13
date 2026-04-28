@@ -15,13 +15,13 @@
         <profile name="Disk" description="OEM image of Debian"/>
     </profiles>
     <preferences>
-        <version>12.1</version>
+        <version>13.0</version>
         <packagemanager>apt</packagemanager>
         <bootsplash-theme>fade-in</bootsplash-theme>
         <bootloader-theme>starfield</bootloader-theme>
         <rpm-check-signatures>false</rpm-check-signatures>
-        <locale>en_US</locale>
-        <keytable>us</keytable>
+<!--        <locale>en_US</locale>
+<keytable>us</keytable> -->
         <timezone>Europe/Berlin</timezone>
     </preferences>
     <preferences profiles="Live">
@@ -50,7 +50,8 @@
     </preferences>
     <users>
         <user password="$1$wYJUgpM5$RXMMeASDc035eX.NbYWFl0" home="/root" name="root" groups="root"/>
-    </users>
+</users>
+<!--
     <repository type="apt-deb" repository_gpgcheck="false" architectures="amd64">
         <source path="obs://Virtualization:Appliances:Staging/Debian_12_update"/>
     </repository>
@@ -62,7 +63,8 @@
     </repository>
     <repository type="apt-deb" distribution="bookworm" components="main contrib non-free" repository_gpgcheck="false">
         <source path="obs://Debian:12/standard"/>
-    </repository>
+	</repository>
+-->
     <packages type="image">
         <package name="libpam-runtime"/>
         <package name="grub-theme-starfield"/>

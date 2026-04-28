@@ -1,0 +1,40 @@
+Kiwi build for Debian 13
+-------------------------------
+
+Current state - probably some things are wrong... ;-)
+
+On SMLM enable Debian 13 replication.
+Make sure you have sufficient disk space available.
+Replicate
+Create lifecycle an stage
+Create activation key
+
+Create kiwi xml and config.sh
+
+We can not set locale and keytable for debian 13 via xml - if required we can do it in config.sh
+So disabled these in the xml:
+<locale>en_US</locale>
+<keytable>us</keytable>
+same problem might be there for timezone in some cases.
+
+Run the build with the repos from SMLM.
+
+We could build with a debian system that has kiwi 10.3 installed.
+Or we can build on SLES.
+
+We have to use kiwi 10.3 for debian - which is not available as container.
+-> get it from https://download.opensuse.org/repositories/Virtualization:/Appliances:/Builder/SLFO/
+
+When building on SLES - we have to use boxbuild as the kiwi image we can use via podman does not support debian.
+https://osinside.github.io/kiwi/plugins/self_contained.html
+-> this needs python3-kiwi_boxed_plugin
+
+This depends on python313-progressbar2
+-> get it from https://download.opensuse.org/repositories/devel:/languages:/python:/backports/16.0/
+
+Remove the repos from the kiwi xml as we need to add them depending on the stage we are building for..
+
+For repos we need to add
+--add-repo obs://Virtualization:Appliances:Staging/Debian_12_update,apt-deb,kiwi,,,,,,,false \
+--add-repo obs://Virtualization:Appliances:Staging/Debian_12_x86_64,apt-deb,kiwi,,,,,,,false \
+for the iso build as we need a few packages for dracut

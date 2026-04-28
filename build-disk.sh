@@ -5,11 +5,41 @@ TARGET_DIR=.
 PROFILE="Disk"
 KIWI_IMAGE="registry.suse.com/bci/kiwi:10.2.33-17.3"
 
+VARIANT="boxbuild" # requires local installed kiwi 10.3 + boxbuild plugin
+#VARIANT="podman" <- can not work as long as we do not have an image with 10.3 and boxbuild..
+
 # clean and recreate the build folder
 rm -rf $TARGET_DIR/image
 mkdir -p $TARGET_DIR/image
 
-# build the image
+if [ "$VARIANT" == "boxbuild" ]; then
+
+# build the image with locally installed kiwi and using boxbuild (qemu)
+kiwi --profile $PROFILE \
+system boxbuild \
+--box ubuntu \
+-- \
+--description $PWD \
+--target-dir $PWD/image \
+--ignore-repos-used-for-build \
+--add-repo 'obs://Virtualization:Appliances:Staging/Debian_12_update,apt-deb,kiwi,,,,,,,false' \
+--add-repo 'obs://Virtualization:Appliances:Staging/Debian_12_x86_64,apt-deb,kiwi,,,,,,,false' \
+--add-repo 'https://ftp.halifax.rwth-aachen.de/debian,apt-deb,bookworm_1,,,,,main,bookworm,false' \
+--add-repo 'https://ftp.halifax.rwth-aachen.de/debian,apt-deb,bookworm_2,,,,,contrib,bookworm,false' \
+--add-repo 'https://ftp.halifax.rwth-aachen.de/debian,apt-deb,bookworm_3,,,,,non-free,bookworm,false'
+
+exit
+--add-repo obs://Virtualization:Appliances:Staging/Debian_12_update,apt-deb,kiwi,,,,,,,false \
+--add-repo obs://Virtualization:Appliances:Staging/Debian_12_x86_64,apt-deb,kiwi,,,,,,,false \
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,trixie_1,,,,,main,trixie,false \
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,trixie_2,,,,,contrib,trixie,false \
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,trixie_3,,,,,non-free,trixie,false
+
+fi
+
+if [ "$VARIANT" == "podman" ]; then
+
+# build the image with podman
 podman run --rm --privileged \
 -v /var/lib/ca-certificates:/var/lib/ca-certificates \
 -v /var/lib/Kiwi/repo:/var/lib/Kiwi/repo \
@@ -22,8 +52,14 @@ system build \
 --description /image \
 --target-dir /image/image \
 --ignore-repos-used-for-build \
---add-repo http://deb.debian.org/debian/dists/trixie/main/binary-amd64/
+--add-repo obs://Virtualization:Appliances:Staging/Debian_12_update,apt-deb,kiwi,,,,,,,false \
+--add-repo obs://Virtualization:Appliances:Staging/Debian_12_x86_64,apt-deb,kiwi,,,,,,,false \
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,trixie_1,,,,,main,trixie,false \
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,trixie_2,,,,,contrib,trixie,false \
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,trixie_3,,,,,non-free,trixie,false
 exit
+
+fi
 
 # for build on SMLM
 --add-repo file:/var/lib/Kiwi/repo,rpm-dir,common_repo,90,false,false \
