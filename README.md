@@ -7,6 +7,7 @@ On SMLM enable Debian 13 replication.
 Make sure you have sufficient disk space available.
 Replicate
 Create lifecycle an stage
+Create distribution
 Create activation key
 
 Create kiwi xml and config.sh
@@ -38,3 +39,22 @@ For repos we need to add
 --add-repo obs://Virtualization:Appliances:Staging/Debian_12_update,apt-deb,kiwi,,,,,,,false \
 --add-repo obs://Virtualization:Appliances:Staging/Debian_12_x86_64,apt-deb,kiwi,,,,,,,false \
 for the iso build as we need a few packages for dracut
+or the corresponding versions.. see build*.sh
+
+To register against SMLM
+ssh into the box as mweiss
+su -
+hostnamectl hostname debian13-1.suse
+
+cat <<EOF > /etc/venv-salt-minion/minion.d/autosign-grains.conf
+# create the grain
+grains:
+    autosign_key: 4fea9511-8b25-4f7a-9071-8eb06c07bad0
+
+# send the grain as part of auth request
+autosign_grains:
+    - autosign_key
+EOF
+
+curl http://susemanager.suse/pub/bootstrap/bootstrap.sh -o bootstrap.sh
+ACTIVATION_KEYS=1-debian13-test bash bootstrap.sh
