@@ -58,3 +58,6 @@ EOF
 
 curl http://susemanager.suse/pub/bootstrap/bootstrap.sh -o bootstrap.sh
 ACTIVATION_KEYS=1-debian13-test bash bootstrap.sh
+
+
+Hint: boxbuild uses https://github.com/OSInside/kiwi-boxed-plugin/blob/main/kiwi_boxed_plugin/config/kiwi_boxed_plugin.yml

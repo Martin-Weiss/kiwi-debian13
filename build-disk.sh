@@ -35,11 +35,19 @@ system boxbuild \
 --ignore-repos-used-for-build \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER,apt-deb,kiwi,,,,,,,false \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER"_x86_64",apt-deb,kiwi,,,,,,,false \
---add-repo http://susemanager.suse/debian,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
---add-repo http://susemanager.suse/debian,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
---add-repo http://susemanager.suse/debian,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
+--add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false
 
 exit
+# smlm
+# http://<smlm>/ks/dist/child/<repo>/<distribution>
+--add-repo http://susemanager.suse/debian13-test-debian-13-pool-amd64/debian13-test,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
+--add-repo http://susemanager.suse/debian13-test-debian-13-main-security-amd64/debian13-test,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
+--add-repo http://susemanager.suse/debian13-test-debian-13-main-updates-amd64/debian13-test,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false \
+--add-repo http://susemanager.suse/debian13-test-managertools-debian13-updates-amd64/debian13-test,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false
+
+#upstream:
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false
