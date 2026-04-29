@@ -3,10 +3,14 @@
 # set variables
 TARGET_DIR=.
 PROFILE="Disk"
-KIWI_IMAGE="registry.suse.com/bci/kiwi:10.2.33-17.3"
+KIWI_BOXES="/data/isos/kiwi_boxes"
 
-VARIANT="boxbuild" # requires local installed kiwi 10.3 + boxbuild plugin
-#VARIANT="podman" <- can not work as long as we do not have an image with 10.3 and boxbuild..
+#KIWI_IMAGE="registry.suse.com/bci/kiwi:10.2.33-17.3" #official release
+#KIWI_IMAGE="registry.suse.de/home/mschaefer/containers_slfo/kiwi:latest" #test release 10.3 with boxbuild support
+KIWI_IMAGE="public.ecr.aws/b9k1j9y6/kiwi:latest" #test release 10.3 with boxbuild support
+
+#VARIANT="boxbuild" # requires local installed kiwi 10.3 + boxbuild plugin
+VARIANT="podman" #<- can not work as long as we do not have an image with 10.3 and boxbuild..
 
 #DEBIAN="bookworm"
 #DEBIAN_VER="12"
@@ -17,6 +21,7 @@ DEBIAN_VER="13"
 # clean and recreate the build folder
 rm -rf $TARGET_DIR/image
 mkdir -p $TARGET_DIR/image
+mkdir -p $KIWI_BOXES
 
 if [ "$VARIANT" == "boxbuild" ]; then
 
@@ -30,11 +35,14 @@ system boxbuild \
 --ignore-repos-used-for-build \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER,apt-deb,kiwi,,,,,,,false \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER"_x86_64",apt-deb,kiwi,,,,,,,false \
+--add-repo http://susemanager.suse/debian,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
+--add-repo http://susemanager.suse/debian,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
+--add-repo http://susemanager.suse/debian,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false
+
+exit
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false
-
-exit
 
 fi
 
@@ -46,14 +54,17 @@ podman run --rm --privileged \
 -v /var/lib/Kiwi/repo:/var/lib/Kiwi/repo \
 -v $TARGET_DIR/kiwi.yml:/etc/kiwi.yml \
 -v $TARGET_DIR:/image:Z \
-$KIWI_IMAGE kiwi-ng \
+-v $KIWI_BOXES:/root/.kiwi_boxes \
+$KIWI_IMAGE \
 --profile $PROFILE \
-system build \
---allow-existing-root \
+system boxbuild \
+--box ubuntu -- \
 --description /image \
 --target-dir /image/image \
+--allow-existing-root \
+--ignore-repos \
 --ignore-repos-used-for-build \
---add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER"_update",apt-deb,kiwi,,,,,,,false \
+--add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER,apt-deb,kiwi,,,,,,,false \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER"_x86_64",apt-deb,kiwi,,,,,,,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
 --add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
