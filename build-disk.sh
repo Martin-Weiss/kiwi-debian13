@@ -7,10 +7,14 @@ KIWI_BOXES="/data/isos/kiwi_boxes"
 
 #KIWI_IMAGE="registry.suse.com/bci/kiwi:10.2.33-17.3" #official release
 #KIWI_IMAGE="registry.suse.de/home/mschaefer/containers_slfo/kiwi:latest" #test release 10.3 with boxbuild support
-KIWI_IMAGE="public.ecr.aws/b9k1j9y6/kiwi:latest" #test release 10.3 with boxbuild support
+#KIWI_IMAGE="public.ecr.aws/b9k1j9y6/kiwi:latest" #test release 10.3 with boxbuild support
+KIWI_IMAGE="dp.apps.rancher.io/containers/kiwi:10.3.4-1.5" #10.3 with boxbuild support from application collection
+# appco image uses user 1000 (media) so we need to set different rights
+# [ ERROR   ]: 12:50:07 | KiwiBoxPluginTargetPathError: Failed to create/setup target path /image/image: [Errno 13] Permission denied: '/image/image/result.log'
+# appco image uses /.kiwi_boxes instead of /root/.kiwi_boxes - so need to add another volume
 
-#VARIANT="boxbuild" # requires local installed kiwi 10.3 + boxbuild plugin
-VARIANT="podman" #<- can not work as long as we do not have an image with 10.3 and boxbuild.. but works with 10.3 test image with boxbuild support above. Hint: entrypoint added so kiwi-ng / kiwi needs to be removed
+VARIANT="local" # requires local installed kiwi 10.3 + boxbuild plugin
+#VARIANT="podman" #<- can not work as long as we do not have an image with 10.3 and boxbuild.. but works with 10.3 test image with boxbuild support above. Hint: entrypoint added so kiwi-ng / kiwi needs to be removed
 
 #DEBIAN="bookworm"
 #DEBIAN_VER="12"
@@ -21,24 +25,35 @@ DEBIAN_VER="13"
 # clean and recreate the build folder
 rm -rf $TARGET_DIR/image
 mkdir -p $TARGET_DIR/image
+# workaround, because kiwi normally runs as root - but the image dp.apps.rancher.io/containers/kiwi:10.3.4-1.5 runs as user 1000
+chmod -R 777 $TARGET_DIR/image
 mkdir -p $KIWI_BOXES
+# workaround, because kiwi normally runs as root - but the image dp.apps.rancher.io/containers/kiwi:10.3.4-1.5 runs as user 1000
+chmod -R 777 $KIWI_BOXES
 
 # build the image with locally installed kiwi and using boxbuild (qemu)
-if [ "$VARIANT" == "boxbuild" ]; then
+if [ "$VARIANT" == "local" ]; then
 kiwi --profile $PROFILE \
 system boxbuild \
 --box ubuntu \
 -- \
 --description $PWD \
 --target-dir $PWD/image \
+--allow-existing-root \
+--ignore-repos \
 --ignore-repos-used-for-build \
+--ca-cert /usr/local/share/ca-certificates/RHN-ORG-TRUSTED-SSL-CERT.crt \
+--ca-target-distribution debian \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER,apt-deb,kiwi,,,,,,,false \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER"_x86_64",apt-deb,kiwi,,,,,,,false \
---add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
---add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
---add-repo https://ftp.halifax.rwth-aachen.de/debian,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_1",,,,,,debian13-test-debian-13-pool-amd64,false \
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_2",,,,,,debian13-test-debian-13-main-updates-amd64,false \
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_3",,,,,,debian13-test-debian-13-main-security-amd64,false \
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_4",,,,,,debian13-test-managertools-debian13-updates-amd64,false
 exit
 fi
+
+#--box-debug \
 
 # build the image with podman <- this is the future target as we do not install and maintain kiwi locally!
 if [ "$VARIANT" == "podman" ]; then
@@ -48,10 +63,12 @@ podman run --rm --privileged \
 -v $TARGET_DIR/kiwi.yml:/etc/kiwi.yml \
 -v $TARGET_DIR:/image:Z \
 -v $KIWI_BOXES:/root/.kiwi_boxes \
+-v $KIWI_BOXES:/.kiwi_boxes \
 $KIWI_IMAGE \
 --profile $PROFILE \
 system boxbuild \
---box ubuntu -- \
+--box ubuntu \
+-- \
 --description /image \
 --target-dir /image/image \
 --allow-existing-root \
@@ -61,15 +78,40 @@ system boxbuild \
 --ca-target-distribution debian \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER,apt-deb,kiwi,,,,,,,false \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER"_x86_64",apt-deb,kiwi,,,,,,,false \
---add-repo https://susemanager.weiss.ddnss.de/rhn/manager/download,apt-deb,$DEBIAN"_1",,,,,,debian13-test-debian-13-pool-amd64,false \
---add-repo https://susemanager.weiss.ddnss.de/rhn/manager/download,apt-deb,$DEBIAN"_2",,,,,,debian13-test-debian-13-main-updates-amd64,false \
---add-repo https://susemanager.weiss.ddnss.de/rhn/manager/download,apt-deb,$DEBIAN"_3",,,,,,debian13-test-debian-13-main-security-amd64,false \
---add-repo https://susemanager.weiss.ddnss.de/rhn/manager/download,apt-deb,$DEBIAN"_4",,,,,,debian13-test-managertools-debian13-updates-amd64,false
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_1",,,,,,debian13-test-debian-13-pool-amd64,false \
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_2",,,,,,debian13-test-debian-13-main-updates-amd64,false \
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_3",,,,,,debian13-test-debian-13-main-security-amd64,false \
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_4",,,,,,debian13-test-managertools-debian13-updates-amd64,false
 exit
 fi
 
+#--box-debug \
+
+# rhn.conf - disable auth check for testing
+# java.salt_check_download_tokens = false
+
 # smlm with authentication (stolen creds from another system) - need to find out how to auto-generate the required creds
-#
+--add-repo 'https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJIcGpYSlY3Umk5TXZnWUphRDViaUpRIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1kZWJpYW4tMTMtcG9vbC1hbWQ2NCJdfQ.kXr5XcLEXwDYwEVpOShmYKVOE68N6cRQObWyVdMb2eQ@susemanager.weiss.ddnss.de/rhn/manager/download',apt-deb,$DEBIAN"_1",,,,,,debian13-test-debian-13-pool-amd64,false \
+--add-repo 'https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJCZFlqVlZEN3VkUVY2Skltdkw0MldBIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1kZWJpYW4tMTMtbWFpbi11cGRhdGVzLWFtZDY0Il19.KyBeyRBZz5ePYTde7DPJbvcikudZHgJ3vD2G7lS-zrA@susemanager.weiss.ddnss.de/rhn/manager/download',apt-deb,$DEBIAN"_2",,,,,,debian13-test-debian-13-main-updates-amd64,false \
+--add-repo 'https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJYWDJkN3VCQ2xJczhlbWtrVDFrZHJBIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1kZWJpYW4tMTMtbWFpbi1zZWN1cml0eS1hbWQ2NCJdfQ.Y_Z3Z2h_AGzuVUmqeZUFbSxqBRskNS8FG_cgcmmlqyQ@susemanager.weiss.ddnss.de/rhn/manager/download',apt-deb,$DEBIAN"_3",,,,,,debian13-test-debian-13-main-security-amd64,false \
+--add-repo 'https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIwWGNndnBQQ0pLUmNtdUtFWnVCNUpnIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1tYW5hZ2VydG9vbHMtZGViaWFuMTMtdXBkYXRlcy1hbWQ2NCJdfQ.j7tc7osVoPALdrYQ3vGcNP22NwLPjpyc4xa-sV0Unx0@susemanager.weiss.ddnss.de/rhn/manager/download',apt-deb,$DEBIAN"_4",,,,,,debian13-test-managertools-debian13-updates-amd64,false
+
+--add-repo "https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJIcGpYSlY3Umk5TXZnWUphRDViaUpRIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1kZWJpYW4tMTMtcG9vbC1hbWQ2NCJdfQ.kXr5XcLEXwDYwEVpOShmYKVOE68N6cRQObWyVdMb2eQ@susemanager.weiss.ddnss.de/rhn/manager/download",apt-deb,$DEBIAN"_1",,,,,,debian13-test-debian-13-pool-amd64,false \
+--add-repo "https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJCZFlqVlZEN3VkUVY2Skltdkw0MldBIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1kZWJpYW4tMTMtbWFpbi11cGRhdGVzLWFtZDY0Il19.KyBeyRBZz5ePYTde7DPJbvcikudZHgJ3vD2G7lS-zrA@susemanager.weiss.ddnss.de/rhn/manager/download",apt-deb,$DEBIAN"_2",,,,,,debian13-test-debian-13-main-updates-amd64,false \
+--add-repo "https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJYWDJkN3VCQ2xJczhlbWtrVDFrZHJBIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1kZWJpYW4tMTMtbWFpbi1zZWN1cml0eS1hbWQ2NCJdfQ.Y_Z3Z2h_AGzuVUmqeZUFbSxqBRskNS8FG_cgcmmlqyQ@susemanager.weiss.ddnss.de/rhn/manager/download",apt-deb,$DEBIAN"_3",,,,,,debian13-test-debian-13-main-security-amd64,false \
+--add-repo "https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIwWGNndnBQQ0pLUmNtdUtFWnVCNUpnIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1tYW5hZ2VydG9vbHMtZGViaWFuMTMtdXBkYXRlcy1hbWQ2NCJdfQ.j7tc7osVoPALdrYQ3vGcNP22NwLPjpyc4xa-sV0Unx0@susemanager.weiss.ddnss.de/rhn/manager/download",apt-deb,$DEBIAN"_4",,,,,,debian13-test-managertools-debian13-updates-amd64,false
+
+--add-repo https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJIcGpYSlY3Umk5TXZnWUphRDViaUpRIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1kZWJpYW4tMTMtcG9vbC1hbWQ2NCJdfQ.kXr5XcLEXwDYwEVpOShmYKVOE68N6cRQObWyVdMb2eQ@susemanager.weiss.ddnss.de/rhn/manager/download,apt-deb,$DEBIAN"_1",,,,,,debian13-test-debian-13-pool-amd64,false \
+--add-repo https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJCZFlqVlZEN3VkUVY2Skltdkw0MldBIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1kZWJpYW4tMTMtbWFpbi11cGRhdGVzLWFtZDY0Il19.KyBeyRBZz5ePYTde7DPJbvcikudZHgJ3vD2G7lS-zrA@susemanager.weiss.ddnss.de/rhn/manager/download,apt-deb,$DEBIAN"_2",,,,,,debian13-test-debian-13-main-updates-amd64,false \
+--add-repo https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJYWDJkN3VCQ2xJczhlbWtrVDFrZHJBIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1kZWJpYW4tMTMtbWFpbi1zZWN1cml0eS1hbWQ2NCJdfQ.Y_Z3Z2h_AGzuVUmqeZUFbSxqBRskNS8FG_cgcmmlqyQ@susemanager.weiss.ddnss.de/rhn/manager/download,apt-deb,$DEBIAN"_3",,,,,,debian13-test-debian-13-main-security-amd64,false \
+--add-repo https://eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIwWGNndnBQQ0pLUmNtdUtFWnVCNUpnIiwiZXhwIjoxODA5MDkxNzYzLCJpYXQiOjE3Nzc1NTU3NjMsIm5iZiI6MTc3NzU1NTY0Mywib3JnIjoxLCJvbmx5Q2hhbm5lbHMiOlsiZGViaWFuMTMtdGVzdC1tYW5hZ2VydG9vbHMtZGViaWFuMTMtdXBkYXRlcy1hbWQ2NCJdfQ.j7tc7osVoPALdrYQ3vGcNP22NwLPjpyc4xa-sV0Unx0@susemanager.weiss.ddnss.de/rhn/manager/download,apt-deb,$DEBIAN"_4",,,,,,debian13-test-managertools-debian13-updates-amd64,false
+
+# smlm with authentication (stolen creds from another system) - need to find out how to auto-generate the required creds
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_1",,,,,,debian13-test-debian-13-pool-amd64,false \
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_2",,,,,,debian13-test-debian-13-main-updates-amd64,false \
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_3",,,,,,debian13-test-debian-13-main-security-amd64,false \
+--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_4",,,,,,debian13-test-managertools-debian13-updates-amd64,false
+
 --add-repo http://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_1",,,,,,debian13-test-debian-13-pool-amd64,false \
 --add-repo http://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_2",,,,,,debian13-test-debian-13-main-updates-amd64,false \
 --add-repo http://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_3",,,,,,debian13-test-debian-13-main-security-amd64,false \
