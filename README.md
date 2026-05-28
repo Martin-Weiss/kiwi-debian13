@@ -43,8 +43,12 @@ For repos we need to add (or 13 in Builder instead of Staging)
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER,apt-deb,kiwi,,,,,,,false \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER"_x86_64",apt-deb,kiwi,,,,,,,false \
 
+
 for the iso build as we need a few packages for dracut
 or the corresponding versions.. see build*.sh
+
+Added a way in the build-disk.sh to use a debian snapshot for reproducible builds.
+Added combustion but need to see if it runs as part of the boot in dracut.
 
 To register against SMLM
 ------------------------
@@ -81,6 +85,6 @@ exit
 
 ToDo / next steps:
 
-- get build done with frozen SMLM channels
-- get personalization added - maybe see if combustion can work
+- get build done with frozen SMLM channels - challenges with the channels in SMLM vs Kiwi
+- get personalization added - maybe see if combustion can work - added combustion
 - see how we can add the boxbuild feature to SMLM (idea is to detect the OS in the kiwi xml and then select the right box for the right build...)

@@ -46,6 +46,9 @@
                 <oem-device-filter>/dev/ram</oem-device-filter>
                 <oem-multipath-scan>false</oem-multipath-scan>
             </oemconfig>
+	    <partitions>
+              <partition name="combustion" size="2048" mountpoint="/oem" filesystem="xfs"/>
+            </partitions>
         </type>
     </preferences>
     <users>
@@ -391,6 +394,8 @@
         <package name="xz-utils"/>
         <package name="zlib1g"/>
 	<package name="zstd"/>
+	<!-- can not add the deb package via file: so adding it via root and config.sh -->
+	    <!--	<package name="combustion"/> -->
     </packages>
     <packages type="image" profiles="Virtual">
         <package name="shim-signed"/>

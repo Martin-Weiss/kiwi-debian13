@@ -22,6 +22,10 @@ VARIANT="local" # requires local installed kiwi 10.3 + boxbuild plugin
 DEBIAN="trixie"
 DEBIAN_VER="13"
 
+#DEBIAN_SOURCE="https://ftp.halifax.rwth-aachen.de/debian"
+# using a snapshot to be reproducible
+DEBIAN_SOURCE="https://snapshot.debian.org/archive/debian/20260528T084923Z"
+
 # clean and recreate the build folder
 rm -rf $TARGET_DIR/image
 mkdir -p $TARGET_DIR/image
@@ -46,12 +50,41 @@ system boxbuild \
 --ca-target-distribution debian \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER,apt-deb,kiwi,,,,,,,false \
 --add-repo obs://Virtualization:Appliances:Builder/"Debian_"$DEBIAN_VER"_x86_64",apt-deb,kiwi,,,,,,,false \
---add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_1",,,,,,debian13-test-debian-13-pool-amd64,false \
---add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_2",,,,,,debian13-test-debian-13-main-updates-amd64,false \
---add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_3",,,,,,debian13-test-debian-13-main-security-amd64,false \
---add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb,$DEBIAN"_4",,,,,,debian13-test-managertools-debian13-updates-amd64,false
+--add-repo $DEBIAN_SOURCE,apt-deb,$DEBIAN"_1",,,,,main,$DEBIAN,false \
+--add-repo $DEBIAN_SOURCE,apt-deb,$DEBIAN"_2",,,,,contrib,$DEBIAN,false \
+--add-repo $DEBIAN_SOURCE,apt-deb,$DEBIAN"_3",,,,,non-free,$DEBIAN,false
+
 exit
 fi
+
+# does not work
+#--add-repo file:/data/git/kiwi-debian13/root/deb,apt-deb,common_repo,90,false,false \
+
+# Test 27.05.2026:
+#--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download/debian13-test-debian-13-pool-amd64/,apt-deb,$DEBIAN"_1",,,,,,,false \
+# gets /rhn/manager/download/debian13-test-debian-13-pool-amd64/./Packages.gz successful but then
+# results in /rhn/manager/download/debian13-test-debian-13-pool-amd64/debian13-test-debian-13-pool-amd64/getPackage/
+# --> twice debian13-test-debian-13-pool-amd64
+
+#--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download/,apt-deb,$DEBIAN"_1",,,,,,debian13-test-debian-13-pool-amd64,false \
+#--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download/,apt-deb,$DEBIAN"_1",,,,,debian13-test-debian-13-pool-amd64,debian13-test-debian-13-pool-amd64,false \
+# results in /rhn/manager/download/dists/debian13-test-debian-13-pool-amd64/Release 403
+#
+# 192.168.0.31 - - [27/May/2026:16:30:02 +0200] "GET /rhn/manager/download/dists/debian13-test-debian-13-pool-amd64/Release HTTP/1.1" 403 4299
+# 192.168.0.31 - - [27/May/2026:16:30:02 +0200] "GET /rhn/manager/download/dists/debian13-test-debian-13-pool-amd64/debian13-test-debian-13-pool-amd64/binary-amd64/Packages.xz HTTP/1.1" 403 4348
+#
+# --> "why is "dists" added, here? can SMLM provide with "/dists/"? https://github.com/OSInside/kiwi/blob/b9b4281744cd17535fcb96c8c0fe28722d5200fd/kiwi/tasks/image_info.py#L213 <- dists is hard coded?!?
+
+#--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download/,apt-deb,$DEBIAN"_1",,,,,debian13-test-debian-13-pool-amd64,,false \
+# results in /rhn/manager/download/./Release
+
+#-----------------------------------
+
+#--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb/debian13-test-debian-13-main-updates-amd64,$DEBIAN"_2",,,,,,,false \
+#--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb/debian13-test-debian-13-main-security-amd64,$DEBIAN"_3",,,,,,,false \
+#--add-repo https://susemanager.weiss.ddnss.de:443/rhn/manager/download,apt-deb/debian13-test-managertools-debian13-updates-amd64,$DEBIAN"_4",,,,,,,false
+
+#--add-repo=<source,type,alias,priority,imageinclude,package_gpgcheck,{signing_keys},components,distribution,repo_gpgcheck,repo_sourcetype>
 
 #--box-debug \
 
